@@ -1,205 +1,111 @@
-import tkinter as tk                    
-from tkinter import ttk                  
-from tkinter import messagebox          
-import sqlite3 as sql                     
-  
-  
-def add_task():  
-     
-    task_string = task_field.get()  
-     
-    if len(task_string) == 0:  
-   
-        messagebox.showinfo('Error', 'Field is Empty.')  
-    else:  
-         
-        tasks.append(task_string)  
-         
-        the_cursor.execute('insert into tasks values (?)', (task_string ,))  
-         
-        list_update()  
-    
-        task_field.delete(0, 'end')  
-  
+import tkinter as tk
+from tkinter import messagebox
+from datetime import datetime
 
-def list_update():  
-     
-    clear_list()  
+class Task:
+    def __init__(self, description, due_date, priority):
+        self.description = description
+        self.due_date = datetime.strptime(due_date, '%Y-%m-%d').date()
+        self.priority = priority
+        self.completed = False
+
+class ToDoApp:
+    def __init__(self, master):
+        self.master = master
+        self.master.title("To-Do List App")
+
+        self.tasks = []
+
   
-    for task in tasks:  
+        self.create_widgets()
+
+    def create_widgets(self):
+      
+        tk.Label(self.master, text="Description:").grid(row=0, column=0, sticky=tk.E)
+        tk.Label(self.master, text="Due Date (YYYY-MM-DD):").grid(row=1, column=0, sticky=tk.E)
+        tk.Label(self.master, text="Priority:").grid(row=2, column=0, sticky=tk.E)
+
+  
+        self.description_entry = tk.Entry(self.master)
+        self.description_entry.grid(row=0, column=1, padx=5, pady=5)
+        self.due_date_entry = tk.Entry(self.master)
+        self.due_date_entry.grid(row=1, column=1, padx=5, pady=5)
+        self.priority_entry = tk.Entry(self.master)
+        self.priority_entry.grid(row=2, column=1, padx=5, pady=5)
+
        
-        task_listbox.insert('end', task)  
-  
+        tk.Button(self.master, text="Add Task", command=self.add_task).grid(row=3, column=0, columnspan=2, pady=10)
 
-def delete_task():  
-    
-    try:  
-      
-        the_value = task_listbox.get(task_listbox.curselection())  
-         
-        if the_value in tasks:  
-            
-            tasks.remove(the_value)  
-           
-           
-            the_cursor.execute('delete from tasks where title = ?', (the_value,))  
-    except:  
-        
-        messagebox.showinfo('Error', 'No Task Selected. Cannot Delete.')        
-  
- 
-def delete_all_tasks():  
-    
-    message_box = messagebox.askyesno('Delete All', 'Are you sure?')  
-      
-    if message_box == True:  
-       
-        while(len(tasks) != 0):  
-            
-            tasks.pop()  
-        
-        the_cursor.execute('delete from tasks')  
-        
-        list_update()  
-  
-# function to clear the list  
-def clear_list():  
-    
-    task_listbox.delete(0, 'end')  
-  
-# function to close the application  
-def close():  
-    
-    print(tasks)  
-    
-    guiWindow.destroy()  
-  
-# function to retrieve data from the database  
-def retrieve_database():  
-     
-    while(len(tasks) != 0):  
-        
-        tasks.pop()  
-   
-    for row in the_cursor.execute('select title from tasks'):  
-       
-        tasks.append(row[0])  
-  
-# main function  
-if __name__ == "__main__":  
-    
-    guiWindow = tk.Tk()  
-  
-    guiWindow.title("To-Do List Manager")  
-  
-    guiWindow.geometry("600x450+750+250")  
-    
-    guiWindow.resizable(0, 0)  
-    
-    guiWindow.configure(bg = "#7FFF00")  
-  
-   
-    the_connection = sql.connect('list.db')  
-   
-    the_cursor = the_connection.cursor()  
-     
-    the_cursor.execute('create table if not exists tasks (title text)')  
+        # Task Listbox
+        self.task_listbox = tk.Listbox(self.master, selectmode=tk.SINGLE, height=10, width=50)
+        self.task_listbox.grid(row=4, column=0, columnspan=2, pady=10)
+        self.populate_task_listbox()
 
-    tasks = []  
-      
-  
-    header_frame = tk.Frame(guiWindow, bg = "#FAEBD7")  
-    functions_frame = tk.Frame(guiWindow, bg = "#FAEBD7")  
-    listbox_frame = tk.Frame(guiWindow, bg = "#FAEBD7")  
-  
-    
-    header_frame.pack(fill = "both")  
-    functions_frame.pack(side = "left", expand = True, fill = "both")  
-    listbox_frame.pack(side = "right", expand = True, fill = "both")  
-      
-   
-    header_label = ttk.Label(  
-        header_frame,  
-        text = "The To-Do List",  
-        font = ("Brush Script MT", "30"),  
-        background = "#FAEBD7",  
-        foreground = "#8B4513"  
-    )  
+        
+        tk.Button(self.master, text="Mark as Completed", command=self.mark_as_completed).grid(row=5, column=0, pady=5)
+        tk.Button(self.master, text="Remove Task", command=self.remove_task).grid(row=5, column=1, pady=5)
 
-    header_label.pack(padx = 20, pady = 20)  
-  
-   
-    task_label = ttk.Label(  
-        functions_frame,  
-        text = "Enter the Task:",  
-        font = ("Comic Sans", "11", "bold"),  
-        background = "#FAEBD7",  
-        foreground = "#000000"  
-    )  
-    
-    task_label.place(x = 30, y = 40)  
-      
-    
-    task_field = ttk.Entry(  
-        functions_frame,  
-        font = ("Comic Sans", "12"),  
-        width = 18,  
-        background = "#FFF8DC",  
-        foreground = "#A52A2A"  
-    )  
-   
-    task_field.place(x = 30, y = 80)  
-  
-   
-    add_button = ttk.Button(  
-        functions_frame,  
-        text = "Add Task",  
-        width = 24,  
-        command = add_task  
-    )  
-    del_button = ttk.Button(  
-        functions_frame,  
-        text = "Delete Task",  
-        width = 24,  
-        command = delete_task  
-    )  
-    del_all_button = ttk.Button(  
-        functions_frame,  
-        text = "Delete All Tasks",  
-        width = 24,  
-        command = delete_all_tasks  
-    )  
-    exit_button = ttk.Button(  
-        functions_frame,  
-        text = "Exit",  
-        width = 24,  
-        command = close  
-    )  
-   
-    add_button.place(x = 30, y = 120)  
-    del_button.place(x = 30, y = 160)  
-    del_all_button.place(x = 30, y = 200)  
-    exit_button.place(x = 30, y = 240)  
-  
- 
-    task_listbox = tk.Listbox(  
-        listbox_frame,  
-        width = 26,  
-        height = 13,  
-        selectmode = 'SINGLE',  
-        background = "#FFFFFF",  
-        foreground = "#000000",  
-        selectbackground = "#CD853F",  
-        selectforeground = "#FFFFFF"  
-    )  
-    
-    task_listbox.place(x = 10, y = 20)  
-  
- 
-    retrieve_database()  
-    list_update()  
-   
-    guiWindow.mainloop()  
-     
-    the_connection.commit()  
-    the_cursor.close()  
+        # Button to delete all tasks
+        tk.Button(self.master, text="Delete All Tasks", command=self.delete_all_tasks).grid(row=6, column=0, columnspan=2, pady=10)
+
+    def add_task(self):
+        description = self.description_entry.get()
+        due_date = self.due_date_entry.get()
+        priority = self.priority_entry.get()
+
+        if description and due_date and priority:
+            task = Task(description, due_date, priority)
+            self.tasks.append(task)
+            self.populate_task_listbox()
+            self.clear_entry_fields()
+        else:
+            messagebox.showwarning("Incomplete Information", "Please provide all task details.")
+
+    def populate_task_listbox(self):
+        self.task_listbox.delete(0, tk.END)
+        for index, task in enumerate(self.tasks, start=1):
+            status = 'Done' if task.completed else 'Not Done'
+            self.task_listbox.insert(tk.END, f"{index}. {task.description} (Due Date: {task.due_date}, Priority: {task.priority}) - {status}")
+
+    def clear_entry_fields(self):
+        self.description_entry.delete(0, tk.END)
+        self.due_date_entry.delete(0, tk.END)
+        self.priority_entry.delete(0, tk.END)
+
+    def mark_as_completed(self):
+        selected_index = self.task_listbox.curselection()
+
+        if selected_index:
+            task_index = selected_index[0]
+            if 0 <= task_index < len(self.tasks):
+                self.tasks[task_index].completed = True
+                self.populate_task_listbox()
+            else:
+                messagebox.showwarning("Invalid Task Index", "Please select a valid task.")
+        else:
+            messagebox.showwarning("No Task Selected", "Please select a task to mark as completed.")
+
+    def remove_task(self):
+        selected_index = self.task_listbox.curselection()
+
+        if selected_index:
+            task_index = selected_index[0]
+            if 0 <= task_index < len(self.tasks):
+                del self.tasks[task_index]
+                self.populate_task_listbox()
+            else:
+                messagebox.showwarning("Invalid Task Index", "Please select a valid task.")
+        else:
+            messagebox.showwarning("No Task Selected", "Please select a task to remove.")
+
+    def delete_all_tasks(self):
+        confirmed = messagebox.askyesno("Delete All Tasks", "Are you sure you want to delete all tasks?")
+        if confirmed:
+            self.tasks = []
+            self.populate_task_listbox()
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = ToDoApp(root)
+    root.mainloop()
+
