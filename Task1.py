@@ -36,7 +36,7 @@ class ToDoApp:
        
         tk.Button(self.master, text="Add Task", command=self.add_task).grid(row=3, column=0, columnspan=2, pady=10)
 
-        # Task Listbox
+
         self.task_listbox = tk.Listbox(self.master, selectmode=tk.SINGLE, height=10, width=50)
         self.task_listbox.grid(row=4, column=0, columnspan=2, pady=10)
         self.populate_task_listbox()
@@ -45,7 +45,6 @@ class ToDoApp:
         tk.Button(self.master, text="Mark as Completed", command=self.mark_as_completed).grid(row=5, column=0, pady=5)
         tk.Button(self.master, text="Remove Task", command=self.remove_task).grid(row=5, column=1, pady=5)
 
-        # Button to delete all tasks
         tk.Button(self.master, text="Delete All Tasks", command=self.delete_all_tasks).grid(row=6, column=0, columnspan=2, pady=10)
 
     def add_task(self):
